@@ -4,7 +4,9 @@ import {
   loadHistoryFromLocalStorage,
   saveCurrentNodeToLocalStorage,
   loadCurrentNodeFromLocalStorage,
-  clearFlowchartFromLocalStorage
+  clearFlowchartFromLocalStorage,
+  saveCompletedNodesToLocalStorage,
+  loadCompletedNodesFromLocalStorage
 } from '../utils/localStorage';
 import { 
   Box, 
@@ -32,7 +34,8 @@ interface FlowchartProps {
   flowchart: FlowchartType;
   initialNodeId?: string;
   initialHistory?: string[];
-  onProgressUpdate?: (nodeId: string, history: string[]) => void;
+  initialCompletedNodes?: Record<string, boolean>;
+  onProgressUpdate?: (nodeId: string, history: string[], completedNodes: Record<string, boolean>) => void;
 }
 
 interface TabPanelProps {
@@ -66,6 +69,7 @@ const Flowchart: React.FC<FlowchartProps> = ({
   flowchart, 
   initialNodeId,
   initialHistory,
+  initialCompletedNodes,
   onProgressUpdate 
 }) => {
   const [currentNodeId, setCurrentNodeId] = useState(
@@ -74,18 +78,23 @@ const Flowchart: React.FC<FlowchartProps> = ({
   const [history, setHistory] = useState<string[]>(
     initialHistory && initialHistory.length > 0 ? initialHistory : ['budgetIncome']
   );
+  // Track completed nodes
+  const [completedNodes, setCompletedNodes] = useState<Record<string, boolean>>(
+    initialCompletedNodes || {}
+  );
   const [tabValue, setTabValue] = useState(0);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [snackbarMessage, setSnackbarMessage] = useState<string | null>(null);
   
-  // Skip localStorage loading if initialNodeId and initialHistory are provided
+  // Skip localStorage loading if initial values are provided
   useEffect(() => {
-    if (initialNodeId || initialHistory) return;
+    if (initialNodeId || initialHistory || initialCompletedNodes) return;
     
     // Otherwise, load from localStorage as before
     const savedHistory = loadHistoryFromLocalStorage();
     const savedCurrentNode = loadCurrentNodeFromLocalStorage();
+    const savedCompletedNodes = loadCompletedNodesFromLocalStorage();
     
     if (savedHistory && savedHistory.length > 0) {
       setHistory(savedHistory);
@@ -94,13 +103,25 @@ const Flowchart: React.FC<FlowchartProps> = ({
     if (savedCurrentNode && flowchart.nodes[savedCurrentNode]) {
       setCurrentNodeId(savedCurrentNode);
     }
-  }, [flowchart.nodes, initialNodeId, initialHistory]);
+    
+    if (savedCompletedNodes) {
+      setCompletedNodes(savedCompletedNodes);
+      
+      // Apply completed status to the flowchart nodes
+      Object.entries(savedCompletedNodes).forEach(([nodeId, completed]) => {
+        if (flowchart.nodes[nodeId]) {
+          flowchart.nodes[nodeId].completed = completed;
+        }
+      });
+    }
+  }, [flowchart.nodes, initialNodeId, initialHistory, initialCompletedNodes]);
 
-  // Save to localStorage when history or currentNodeId changes
+  // Save to localStorage when values change
   useEffect(() => {
     saveHistoryToLocalStorage(history);
     saveCurrentNodeToLocalStorage(currentNodeId);
-  }, [history, currentNodeId]);
+    saveCompletedNodesToLocalStorage(completedNodes);
+  }, [history, currentNodeId, completedNodes]);
 
   // Call the onProgressUpdate callback if provided, but only when values actually change
   // and with some protection against excessive updates
@@ -108,12 +129,12 @@ const Flowchart: React.FC<FlowchartProps> = ({
     // Use a short delay to prevent too many rapid updates
     const timerId = setTimeout(() => {
       if (onProgressUpdate && history.length > 0) {
-        onProgressUpdate(currentNodeId, history);
+        onProgressUpdate(currentNodeId, history, completedNodes);
       }
     }, 300);
     
     return () => clearTimeout(timerId);
-  }, [history, currentNodeId, onProgressUpdate]);
+  }, [history, currentNodeId, completedNodes, onProgressUpdate]);
 
   const handleNodeClick = (nodeId: string) => {
     setCurrentNodeId(nodeId);
@@ -125,6 +146,7 @@ const Flowchart: React.FC<FlowchartProps> = ({
   const handleReset = () => {
     setCurrentNodeId('budgetIncome');
     setHistory(['budgetIncome']);
+    setCompletedNodes({});
     clearFlowchartFromLocalStorage();
   };
 
@@ -246,6 +268,12 @@ const Flowchart: React.FC<FlowchartProps> = ({
                       
                       // Show a notification when a node is marked as completed or uncompleted
                       if (typeof updates.completed !== 'undefined') {
+                        // Update completed nodes record
+                        setCompletedNodes(prev => ({
+                          ...prev,
+                          [nodeId]: !!updates.completed
+                        }));
+                        
                         setSnackbarMessage(
                           updates.completed 
                             ? `${flowchart.nodes[nodeId].title} marked as completed` 
@@ -268,7 +296,7 @@ const Flowchart: React.FC<FlowchartProps> = ({
                     </Typography>
                     <ArrowForwardIcon color="primary" />
                   </Box>
-                  <Box sx={{ display: 'flex', flexWrap: 'wrap' }}>
+                  <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
                     {relatedNodes.map(node => (
                       <FlowchartNode 
                         key={node.id} 

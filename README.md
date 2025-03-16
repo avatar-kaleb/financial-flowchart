@@ -13,7 +13,7 @@ A React application that displays a financial decision flowchart with an interac
 
 ```bash
 # Clone the repository
-git clone https://github.com/[username]/financial-flowchart.git
+git clone https://github.com/avatar-kaleb/financial-flowchart.git
 cd financial-flowchart
 
 # Install dependencies
@@ -42,7 +42,7 @@ This project is configured to deploy to GitHub Pages. There are two ways to depl
 
 1. Update the `homepage` field in `package.json` with your GitHub username:
    ```json
-   "homepage": "https://[your-username].github.io/financial-flowchart"
+   "homepage": "https://avatar-kaleb.github.io/financial-flowchart"
    ```
 
 2. Run the deploy command:

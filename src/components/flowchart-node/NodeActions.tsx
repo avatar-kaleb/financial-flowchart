@@ -24,6 +24,7 @@ interface NodeActionsProps {
   canProceed: boolean;
   onDecision: (isYes: boolean) => void;
   onNavigate: (nextNodeId: string) => void;
+  nodeCompleted?: boolean;
 }
 
 const NodeActions: React.FC<NodeActionsProps> = ({
@@ -34,7 +35,8 @@ const NodeActions: React.FC<NodeActionsProps> = ({
   nextNodes,
   canProceed,
   onDecision,
-  onNavigate
+  onNavigate,
+  nodeCompleted = false
 }) => {
   const hasNextNodes = nextNodes && nextNodes.length > 0;
 
@@ -87,10 +89,12 @@ const NodeActions: React.FC<NodeActionsProps> = ({
   if (hasNextNodes) {
     return (
       <Box sx={{ mt: 2 }}>
-        <Typography variant="subtitle2" color="primary" gutterBottom>
-          <CheckCircleOutlineIcon sx={{ fontSize: 16, mr: 0.5, verticalAlign: 'middle' }} />
-          Complete this step by:
-        </Typography>
+        {!nodeCompleted && (
+          <Typography variant="subtitle2" color="primary" gutterBottom>
+            <CheckCircleOutlineIcon sx={{ fontSize: 16, mr: 0.5, verticalAlign: 'middle' }} />
+            Complete this step by:
+          </Typography>
+        )}
         
         {!canProceed && (
           <Alert severity="warning" sx={{ mb: 2 }}>
@@ -107,8 +111,8 @@ const NodeActions: React.FC<NodeActionsProps> = ({
               <ListItemText 
                 primary={
                   <Button
-                    size="small"
-                    variant="text"
+                    size="medium"
+                    variant="contained"
                     color="primary"
                     onClick={() => onNavigate(nextNodeId)}
                     endIcon={<NavigateNextIcon />}
@@ -116,7 +120,7 @@ const NodeActions: React.FC<NodeActionsProps> = ({
                     sx={{ 
                       justifyContent: 'flex-start', 
                       textTransform: 'none',
-                      pl: 0
+                      pl: 1
                     }}
                   >
                     {index === 0 ? "Continue to next step" : `Option ${index + 1}`}

@@ -13,9 +13,7 @@ import {
   Button,
   Divider,
   IconButton,
-  Tooltip,
-  FormControlLabel,
-  Checkbox
+  Tooltip
 } from '@mui/material';
 import { FlowchartNode } from '../../types/flowchart';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -139,7 +137,7 @@ const NodeCard: React.FC<NodeCardProps> = ({
     <>
       <Card 
         sx={{ 
-          width: { xs: '100%', sm: 350, md: 380, lg: 400 },
+          width: '100%',
           height: '100%',
           m: 1, 
           border: borderStyle,
@@ -241,16 +239,7 @@ const NodeCard: React.FC<NodeCardProps> = ({
             </Paper>
           )}
           
-          {/* Display completion deadline if exists */}
-          {node.completionDeadline && (
-            <Box sx={{ mb: 2 }}>
-              <Typography variant="caption" color="text.secondary" sx={{ display: 'flex', alignItems: 'center' }}>
-                <Tooltip title="Complete this step by this date">
-                  <span>Complete by: {new Date(node.completionDeadline).toLocaleDateString()}</span>
-                </Tooltip>
-              </Typography>
-            </Box>
-          )}
+          {/* Removed completion deadline display */}
           
           {/* Display subtasks if available */}
           {active && node.subtasks && node.subtasks.length > 0 && (
@@ -260,39 +249,33 @@ const NodeCard: React.FC<NodeCardProps> = ({
             />
           )}
           
-          {/* Add mark as completed control for active step */}
+          {/* Add mark as completed button for active step */}
           {active && (
             <Box sx={{ mb: 2, display: 'flex', justifyContent: 'flex-end' }}>
-              <FormControlLabel
-                control={
-                  <Checkbox 
-                    checked={nodeCompleted} 
-                    onChange={(e) => {
-                      setNodeCompleted(e.target.checked);
-                      // Notify parent component of the change
-                      if (onNodeChange) {
-                        onNodeChange(node.id, { 
-                          completed: e.target.checked,
-                          // Also update subtasks completion if we have them
-                          ...(node.subtasks ? {
-                            subtasks: node.subtasks.map(st => ({
-                              ...st,
-                              completed: e.target.checked
-                            }))
-                          } : {})
-                        });
-                      }
-                    }}
-                    size="small"
-                    color="success"
-                  />
-                }
-                label={
-                  <Typography variant="caption">
-                    Mark step as completed
-                  </Typography>
-                }
-              />
+              <Button
+                variant="contained"
+                color="success"
+                size="small"
+                onClick={() => {
+                  const newCompletedState = !nodeCompleted;
+                  setNodeCompleted(newCompletedState);
+                  // Notify parent component of the change
+                  if (onNodeChange) {
+                    onNodeChange(node.id, { 
+                      completed: newCompletedState,
+                      // Also update subtasks completion if we have them
+                      ...(node.subtasks ? {
+                        subtasks: node.subtasks.map(st => ({
+                          ...st,
+                          completed: newCompletedState
+                        }))
+                      } : {})
+                    });
+                  }
+                }}
+              >
+                {nodeCompleted ? 'Mark as incomplete' : 'Mark as completed'}
+              </Button>
             </Box>
           )}
           
@@ -307,6 +290,7 @@ const NodeCard: React.FC<NodeCardProps> = ({
               canProceed={allSubtasksCompleted}
               onDecision={handleDecision}
               onNavigate={handleValidatedNavigate}
+              nodeCompleted={nodeCompleted}
             />
           )}
           

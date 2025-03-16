@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "homepage": "https://[username].github.io/financial-flowchart",
+  "homepage": "https://avatar-kaleb.github.io/financial-flowchart",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",

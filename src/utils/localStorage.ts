@@ -1,6 +1,7 @@
 // Local storage keys
 const FLOWCHART_HISTORY_KEY = 'finance-flowchart-history';
 const FLOWCHART_CURRENT_NODE_KEY = 'finance-flowchart-current-node';
+const FLOWCHART_COMPLETED_NODES_KEY = 'finance-flowchart-completed-nodes';
 
 /**
  * Save flowchart history to local storage
@@ -52,12 +53,39 @@ export const loadCurrentNodeFromLocalStorage = (): string | null => {
 };
 
 /**
+ * Save completed nodes to local storage
+ */
+export const saveCompletedNodesToLocalStorage = (completedNodes: Record<string, boolean>): void => {
+  try {
+    localStorage.setItem(FLOWCHART_COMPLETED_NODES_KEY, JSON.stringify(completedNodes));
+  } catch (error) {
+    console.error('Failed to save completed nodes to local storage:', error);
+  }
+};
+
+/**
+ * Load completed nodes from local storage
+ */
+export const loadCompletedNodesFromLocalStorage = (): Record<string, boolean> | null => {
+  try {
+    const storedCompletedNodes = localStorage.getItem(FLOWCHART_COMPLETED_NODES_KEY);
+    if (storedCompletedNodes) {
+      return JSON.parse(storedCompletedNodes);
+    }
+  } catch (error) {
+    console.error('Failed to load completed nodes from local storage:', error);
+  }
+  return null;
+};
+
+/**
  * Clear all flowchart data from local storage
  */
 export const clearFlowchartFromLocalStorage = (): void => {
   try {
     localStorage.removeItem(FLOWCHART_HISTORY_KEY);
     localStorage.removeItem(FLOWCHART_CURRENT_NODE_KEY);
+    localStorage.removeItem(FLOWCHART_COMPLETED_NODES_KEY);
   } catch (error) {
     console.error('Failed to clear flowchart data from local storage:', error);
   }
